@@ -2,10 +2,13 @@ import { useRef, useState } from "react";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
 
+import { useChatStore } from "../store/useChatStore";
+
 const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
+  const { sendMessage, isSendingMessage } = useChatStore();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -30,9 +33,20 @@ const MessageInput = () => {
     e.preventDefault();
 
     try {
-      // TODO
+      if (!text.trim() && !imagePreview) {
+        return;
+      }
+
+      await sendMessage({
+        text,
+        image: imagePreview,
+      });
+
+      setText("");
+      removeImage();
     } catch (error) {
       console.error("Failed to send message:", error);
+      toast.error("Failed to send message.");
     }
   };
 
@@ -87,7 +101,7 @@ const MessageInput = () => {
         <button
           type="submit"
           className="btn btn-sm btn-circle"
-          disabled={!text.trim() && !imagePreview}
+          disabled={(!text.trim() && !imagePreview) || isSendingMessage}
         >
           <Send size={22} />
         </button>
